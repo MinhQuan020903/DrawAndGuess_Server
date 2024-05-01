@@ -1,0 +1,31 @@
+server:
+  port: 8081
+socket-server:
+  port: 8086
+  host: localhost
+
+spring:
+  # JDBC properties
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gudra
+    username: hoanglam
+    password: hoanglam
+
+  application:
+    name=jwt-security:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+application:
+  security:
+    jwt:
+      secret-key: PBjL1E+JWXJL+djKzj4mkhxsoR2zJ0CKq1oSnm9kSuS4/TAASWfz3D3i8YsTUvsW
+      expiration: 86400000 # a day
+      refresh-token:
+        expiration: 604800000 # 7 days
