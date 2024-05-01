@@ -37,13 +37,13 @@ public class User implements UserDetails {
     private boolean isOnline;
 
     @Column(name = "friend_list")
-    private int[] friendList;
+    private String[] friendList;
 
     @Column(name = "friend_requests")
-    private int[] friendRequests;
+    private String[] friendRequests;
 
     @Column(name = "friend_requests_receive")
-    private int[] friendRequestsReceive;
+    private String[] friendRequestsReceive;
 
     @Enumerated(EnumType.STRING)
     private Role role;

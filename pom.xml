@@ -13,10 +13,12 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>backend</name>
 	<description>backend</description>
-	<properties>
-		<java.version>21</java.version>
-		<netty-socketio.version>2.0.9 </netty-socketio.version>
-	</properties>
+    <properties>
+        <java.version>21</java.version>
+        <netty-socketio.version>2.0.9</netty-socketio.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+    </properties>
 	<dependencies>
 
 		<!-- Lam: Database -->
