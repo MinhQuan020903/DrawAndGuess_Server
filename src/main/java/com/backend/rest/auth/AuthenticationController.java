@@ -1,5 +1,6 @@
 package com.backend.rest.auth;
 
+import com.backend.rest.ResponseGenerator;
 import com.backend.rest.auth.dto.AuthenticationResponse;
 import com.backend.rest.auth.dto.LoginRequest;
 import com.backend.rest.auth.dto.RegisterRequest;
@@ -36,24 +37,19 @@ public class AuthenticationController {
 
     @ExceptionHandler
     public ResponseEntity<Map<String, Object>> handleException(DuplicateUsernameExc exc) {
-        return new ResponseEntity<>(createResponse(exc), HttpStatus.CONFLICT);
+        return new ResponseEntity<>(ResponseGenerator.createFromExc(exc), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler
     public ResponseEntity<Map<String, Object>> handleException(AuthenticationException exc) {
-        return new ResponseEntity<>(createResponse(exc), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(ResponseGenerator.createFromExc(exc), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     public ResponseEntity<Map<String, Object>> handleException(Exception exc) {
-        return new ResponseEntity<>(createResponse(exc), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(ResponseGenerator.createFromExc(exc), HttpStatus.BAD_REQUEST);
     }
 
-    Map<String, Object> createResponse(Exception exc) {
-        Map<String, Object> responseBody = new HashMap<>();
-        responseBody.put("message", exc.getMessage());
 
-        return responseBody;
-    }
 
 }
