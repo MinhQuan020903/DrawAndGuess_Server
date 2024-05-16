@@ -8,8 +8,8 @@ spring:
   # JDBC properties
   datasource:
     url: jdbc:postgresql://localhost:5432/gudra
-    username: hoanglam
-    password: hoanglam
+    username: postgres
+    password: 12345678
 
   application:
     name=jwt-security:

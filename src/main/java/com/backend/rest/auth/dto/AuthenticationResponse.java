@@ -1,5 +1,6 @@
 package com.backend.rest.auth.dto;
 
+import com.backend.rest.user.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,4 +18,15 @@ public class AuthenticationResponse {
 
     @JsonProperty("refresh_token")
     private String refreshToken;
+
+    @JsonProperty("id")
+    private int id;
+    @JsonProperty("username")
+    private String username;
+
+    @JsonProperty("role")
+    private Role role;
+
+    @JsonProperty("display_name")
+    private String displayName;
 }
