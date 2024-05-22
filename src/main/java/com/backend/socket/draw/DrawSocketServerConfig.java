@@ -1,6 +1,7 @@
 package com.backend.socket.draw;
 
-import com.example.ws.JsonUtils;
+
+import com.backend.utils.JsonUtils;
 import io.socket.engineio.server.EngineIoServerOptions;
 import io.socket.socketio.server.SocketIoSocket;
 import org.json.JSONObject;

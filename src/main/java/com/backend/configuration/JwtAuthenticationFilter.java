@@ -65,23 +65,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
-    @Configuration
-    public static class CorsConfig {
-        @Bean
-        public WebMvcConfigurer corsConfigurer() {
-            return new WebMvcConfigurer() {
-                @Override
-                public void addCorsMappings(CorsRegistry registry){
-                    registry.addMapping("/**")
-                            .allowCredentials(true)
-                            .allowedOriginPatterns("*")
-                            .allowedHeaders("*")
-                            .allowedMethods("GET", "POST", "PUT", "DELETE")
-                            .maxAge(3600);
-
-                }
-            };
-        }
-    }
 }
