@@ -1,6 +1,7 @@
 package com.backend.socket.draw;
 
 
+import com.backend.utils.HashUtils;
 import com.backend.utils.JsonUtils;
 import io.socket.engineio.server.EngineIoServerOptions;
 import io.socket.socketio.server.SocketIoSocket;
@@ -10,38 +11,16 @@ import io.socket.engineio.server.EngineIoServer;
 import io.socket.socketio.server.SocketIoServer;
 import org.springframework.context.annotation.Bean;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
-record Message(
-        String message) {
 
-    String getMessage() {
-        return message;
-    }
-};
-record User(
-        String userId,
-        boolean isPlayer,
-        Object data) {
-    @Override
-    public String userId() {
-        return userId;
-    }
-
-    @Override
-    public boolean isPlayer() {
-        return isPlayer;
-    }
-
-    @Override
-    public Object data() {
-        return data;
-    }
-}
 
 @Configuration
 public class DrawSocketServerConfig {
-
     @Bean
     EngineIoServer engineIoServer() {
         var opt = EngineIoServerOptions.newFromDefault();
@@ -66,7 +45,7 @@ public class DrawSocketServerConfig {
 
             socket.on("client-ready", args1 -> {
                 System.out.println("Client " + socket.getId() + " is ready.");
-                namespace.broadcast(room, "request-canvas-state", JsonUtils.toJsonObj(new User("1", true, ""))
+                namespace.broadcast(room, "request-canvas-state", JsonUtils.toJsonObj(new DrawMessageModel.User("1", true, ""))
             );
             });
             //Send initial canvas state to the client
@@ -89,7 +68,7 @@ public class DrawSocketServerConfig {
 
             // Add a disconnect listener
             socket.on("disconnect", args1 -> {
-                namespace.broadcast(room,"disconnect", JsonUtils.toJsonObj(new Message("Client " + socket.getId() + " has disconnected.")));
+                namespace.broadcast(room,"disconnect", JsonUtils.toJsonObj(new DrawMessageModel.Message("Client " + socket.getId() + " has disconnected.")));
                 socket.disconnect(true);
                 System.out.println("Client " + socket.getId() + " has disconnected.");
             });
