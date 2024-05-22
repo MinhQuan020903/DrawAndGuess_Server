@@ -1,12 +1,15 @@
 server:
   port: 8081
+socket-server:
+  port: 8086
+  host: localhost
 
 spring:
   # JDBC properties
   datasource:
     url: jdbc:postgresql://localhost:5432/gudra
-    username: postgres
-    password: Minhquan2903
+    username: hoanglam
+    password: hoanglam
 
   application:
     name=jwt-security:

@@ -4,12 +4,13 @@ import com.backend.rest.ResponseGenerator;
 import com.backend.rest.auth.dto.AuthenticationResponse;
 import com.backend.rest.auth.dto.LoginRequest;
 import com.backend.rest.auth.dto.RegisterRequest;
+import com.backend.rest.auth.dto.UserInformationResponse;
+import com.backend.rest.auth.dto.UserRequest;
 import com.backend.rest.auth.exc.DuplicateUsernameExc;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import javax.naming.AuthenticationException;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,13 @@ public class AuthenticationController {
             @RequestBody LoginRequest request
     ) {
         return ResponseEntity.ok(service.authenticate(request));
+    }
+
+    @PostMapping("/userinfo")
+    public ResponseEntity<UserInformationResponse> getUserInformation(
+            @RequestBody UserRequest request
+    ) {
+        return ResponseEntity.ok(service.getUserInformation(request));
     }
 
     @ExceptionHandler
