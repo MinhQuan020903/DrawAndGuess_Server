@@ -1,19 +1,33 @@
-package com.backend.configuration.socketio;
+package com.backend.socket;
 
+import com.backend.configuration.JwtService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import io.socket.engineio.server.EngineIoServer;
 import io.socket.engineio.server.EngineIoWebSocket;
 import io.socket.engineio.server.utils.ParseQS;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +39,13 @@ public class EngineIoHandler implements HandshakeInterceptor, WebSocketHandler {
     private static final String ATTRIBUTE_ENGINE_IO_QUERY = "engine.io.query";
     private static final String ATTRIBUTE_ENGINE_IO_HEADERS = "engine.io.headers";
 
+    private final JwtService jwtService;
+
+
     private final EngineIoServer mEngineIoServer;
 
-    public EngineIoHandler(EngineIoServer engineIoServer) {
+    public EngineIoHandler(JwtService jwtService, EngineIoServer engineIoServer) {
+        this.jwtService = jwtService;
         mEngineIoServer = engineIoServer;
     }
 
@@ -39,12 +57,50 @@ public class EngineIoHandler implements HandshakeInterceptor, WebSocketHandler {
         mEngineIoServer.handleRequest(request, response);
     }
 
+    private boolean verifyToken(String token) {
+        try {
+            final String username = jwtService.extractUsername(token);
+            return username != null && !jwtService.isTokenExpired(token);
+        } catch (Exception e) {
+            System.out.println("Token verification failed: " + e.getMessage());
+            return false; // Token verification failed
+        }
+    }
+
+
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) {
+
         attributes.put(ATTRIBUTE_ENGINE_IO_QUERY, request.getURI().getQuery());
         attributes.put(ATTRIBUTE_ENGINE_IO_HEADERS, request.getHeaders());
-        return true;
+
+        // Verify token here
+        String queryString = request.getURI().getQuery();
+        if (queryString != null && queryString.contains("token")) {
+            String token = null;
+            for (String param : queryString.split("&")) {
+                if (param.startsWith("token=")) {
+                    token = param.split("=", 2)[1];
+                    break;
+                }
+            }
+            if (verifyToken(token)) {
+                System.out.println("Token is valid");
+                return true; // Token is valid
+            }
+        } else {
+            assert queryString != null;
+            if (!queryString.contains("token")) {
+                System.out.println("Query string: " + queryString +  ", Token is not valid or missing");
+                // If token is not valid, reject the handshake
+                response.setStatusCode(HttpStatus.FORBIDDEN);
+                return false;
+            }
+        }
+
+        return false;
     }
+
 
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {

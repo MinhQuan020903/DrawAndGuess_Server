@@ -1,22 +1,19 @@
 server:
   port: 8081
-socket-server:
-  port: 8086
-  host: localhost
 
 spring:
   # JDBC properties
   datasource:
     url: jdbc:postgresql://localhost:5432/gudra
-    username: hoanglam
-    password: hoanglam
+    username: postgres
+    password: Minhquan2903
 
   application:
     name=jwt-security:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     show-sql: false
     properties:
       hibernate:

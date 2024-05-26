@@ -1,4 +1,4 @@
-package com.backend.socket.draw;
+package com.backend.socket.lobby;
 
 public class DrawMessageModel {
     record Message(
