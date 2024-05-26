@@ -52,21 +52,31 @@ public class BackendApplication {
 			System.out.println("Generated TOPIC Data");
 
 			var userA = RegisterRequest.builder()
-					.username("tran_van_a")
-					.password("password")
-					.displayName("Trần Văn A")
+					.username("minh_quan")
+					.password("quan2003")
+					.displayName("Đỗ Mai Minh Quân")
 					.role(Role.USER)
 					.build();
 
 			var userB = RegisterRequest.builder()
-					.username("le_thi_b")
-					.password("password")
-					.displayName("Lê Thị B")
+					.username("trong_ninh")
+					.password("ninh2003")
+					.displayName("Nguyễn Trọng Ninh")
 					.role(Role.USER)
 					.build();
 
-			System.out.println("UserA token: " + authenticationService.register(userA).getAccessToken());
-			System.out.println("UserB token: " + authenticationService.register(userB).getAccessToken());
+			var userC = RegisterRequest.builder()
+					.username("ngoc_tin")
+					.password("tin2003")
+					.displayName("Nguyễn Ngọc Tín")
+					.role(Role.USER)
+					.build();
+
+			System.out.println("Quan token: " + authenticationService.register(userA).getAccessToken());
+			System.out.println("Ninh token: " + authenticationService.register(userB).getAccessToken());
+			System.out.println("Tinn token: " + authenticationService.register(userC).getAccessToken());
+
+			System.out.println("Swagger: : http://localhost:8081/swagger-ui/index.html#/");
 		};
 	};
 }

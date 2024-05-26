@@ -13,4 +13,11 @@ public class LoginRequest {
 
     private String username;
     private String password;
+
+    /*
+    {
+        "username": "tran_van_a",
+        "password": "password"
+    }
+     */
 }
