@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -24,11 +26,11 @@ public class UserResponse {
     private boolean isOnline;
 
     @JsonProperty("friend_list")
-    private String[] friendList;
+    private List<String> friendList;
 
     @JsonProperty("friend_requests")
-    private String[] friendRequests;
+    private List<String> friendRequests;
 
     @JsonProperty("friend_requests_receive")
-    private String[] friendRequestsReceive;
+    private List<String> friendRequestsReceive;
 }

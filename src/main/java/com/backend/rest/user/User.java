@@ -1,5 +1,8 @@
 package com.backend.rest.user;
 
+import com.backend.rest.room.entity.Room;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,16 +40,46 @@ public class User implements UserDetails {
     private boolean isOnline;
 
     @Column(name = "friend_list")
-    private String[] friendList;
+    private List<String> friendList;
 
     @Column(name = "friend_requests")
-    private String[] friendRequests;
+    private List<String> friendRequests;
 
     @Column(name = "friend_requests_receive")
-    private String[] friendRequestsReceive;
+    private List<String> friendRequestsReceive;
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @ManyToOne
+    @JoinColumn(name = "room_id", nullable = true, referencedColumnName = "room_id")
+    @JsonBackReference
+    // cart_id chính là trường khoá phụ trong table Items liên kết với khoá chính trong table Cart
+    private Room room;
+
+    public void addFriendList(String username) {
+        friendList.add(username);
+    }
+
+    public void removeFriendList(String username) {
+        friendList.remove(username);
+    }
+
+    public void addFriendRequest(String username) {
+        friendRequests.add(username);
+    }
+
+    public void removeFriendRequest(String username) {
+        friendRequests.remove(username);
+    }
+
+    public void addFriendRequestReceive(String username) {
+        friendRequestsReceive.add(username);
+    }
+
+    public void removeFriendRequestReceive(String username) {
+        friendRequestsReceive.remove(username);
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

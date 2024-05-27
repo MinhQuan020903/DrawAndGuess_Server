@@ -15,6 +15,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -27,11 +29,15 @@ public class AuthenticationService {
 
     public AuthenticationResponse register(RegisterRequest request) throws DuplicateUsernameExc {
 
+
         var user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .displayName(request.getDisplayName())
                 .isOnline(false)
+                .friendList(new ArrayList<>())
+                .friendRequests(new ArrayList<>())
+                .friendRequestsReceive(new ArrayList<>())
                 .role(request.getRole())
                 .build();
 

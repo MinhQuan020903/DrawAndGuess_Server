@@ -1,6 +1,5 @@
 package com.backend.rest.topic;
 
-import com.backend.rest.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,5 +17,9 @@ public class TopicService {
 
     public List<Topic> getAllTopic() {
         return topicRepository.findAll();
+    }
+
+    public Topic getTopicById(int topicId) {
+        return topicRepository.findById(topicId).orElse(null);
     }
 }

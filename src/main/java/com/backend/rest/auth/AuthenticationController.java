@@ -1,5 +1,6 @@
 package com.backend.rest.auth;
 
+import com.backend.configuration.JwtService;
 import com.backend.rest.ResponseGenerator;
 import com.backend.rest.auth.dto.AuthenticationResponse;
 import com.backend.rest.auth.dto.LoginRequest;
@@ -7,9 +8,14 @@ import com.backend.rest.auth.dto.RegisterRequest;
 import com.backend.rest.auth.dto.UserInformationResponse;
 import com.backend.rest.auth.dto.UserRequest;
 import com.backend.rest.auth.exc.DuplicateUsernameExc;
+import com.backend.rest.user.User;
+import com.backend.rest.user.UserService;
+import com.backend.rest.user.dto.ChangePasswordRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import javax.naming.AuthenticationException;
 import java.util.HashMap;
@@ -21,6 +27,7 @@ import java.util.Map;
 public class AuthenticationController {
 
     private final AuthenticationService service;
+    private final JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(
@@ -33,6 +40,7 @@ public class AuthenticationController {
     public ResponseEntity<AuthenticationResponse> authenticate(
             @RequestBody LoginRequest request
     ) {
+
         return ResponseEntity.ok(service.authenticate(request));
     }
 
