@@ -41,6 +41,8 @@ public class LobbySocketServerConfig {
     public void registerLobbyNamespace() {
         System.out.println("Creating lobby socket server.");
         var namespace = sioServer.namespace("/lobby");
+        AtomicReference<String> roomId = new AtomicReference<>("");
+        AtomicReference<Integer> userId = new AtomicReference<>(0);
         namespace.on("connection", args -> {
             var socket = (SocketIoSocket) args[0];
             socket.on("subscribe-lobby", args1 -> {
@@ -50,14 +52,15 @@ public class LobbySocketServerConfig {
                 JSONObject user = userObj.getJSONObject("user");
                 // Parse the user details
                 int id = user.getInt("id");
-                String displayName = user.getString("display_name");
                 String username = user.getString("username");
 
-                System.out.println("Client " + id + ", " + username + " subscribed to lobby.");
+                userId.set(id);
+
+                System.out.println("Client " + userId.get() + ", " + username + " subscribed to lobby.");
                 var roomsList = new ArrayList<JSONObject>();
-                rooms.forEach((roomId, userList) -> {
+                rooms.forEach((room_id, userList) -> {
                     var roomObj = new JSONObject();
-                    roomObj.put("id", roomId);
+                    roomObj.put("id", room_id);
                     roomObj.put("capacity", ROOM_CAPACITY);
                     roomObj.put("currentCapacity", userList.size());
                     roomsList.add(roomObj);
@@ -69,24 +72,25 @@ public class LobbySocketServerConfig {
 
                 JSONObject obj = (JSONObject) args1[0];
 
-                String roomId = obj.getString("roomId");
+                String room_id = obj.getString("roomId");
+                roomId.set(room_id);
 
                 JSONObject user = obj.getJSONObject("user");
-                System.out.println("User: " + user);
                 // Parse the user details
                 int id = user.getInt("id");
 
-                if (rooms.containsKey(roomId) && rooms.get(roomId).size() < ROOM_CAPACITY && !rooms.get(roomId).contains(String.valueOf(id))) {
-                    rooms.get(roomId).add(String.valueOf(id));
-                    socket.send("room-joined", roomId);
+                if (rooms.containsKey(roomId.get()) && rooms.get(roomId.get()).size() < ROOM_CAPACITY && !rooms.get(roomId.get()).contains(String.valueOf(id))) {
+                    rooms.get(roomId.get()).add(String.valueOf(id));
+                    socket.send("room-joined", roomId.get());
                 } else {
-                    socket.send("room-full", roomId);
+                    socket.send("room-full", roomId.get());
                 }
             });
 
             socket.on("disconnect", args1 -> {
-//                rooms.forEach((roomId, userList) -> userList.remove(socket.getId()));
-                System.out.println("Client " + socket.getId() + " has disconnected.");
+                namespace.broadcast(roomId.get(), "disconnect", JsonUtils.toJsonObj(new DrawMessageModel.Message("Client " + userId.get() + " has disconnected.")));
+                socket.disconnect(true);
+                System.out.println("Client " + userId.get() + " has disconnected from lobby.");
             });
         });
     }
@@ -96,30 +100,29 @@ public class LobbySocketServerConfig {
         System.out.println("Creating draw socket server.");
         var namespace = sioServer.namespace("/draw");
         AtomicReference<String> roomId = new AtomicReference<>("");
+        AtomicReference<Integer> userId = new AtomicReference<>(0);
         namespace.on("connection", args -> {
             var socket = (SocketIoSocket) args[0];
-            System.out.println("Draw: Client " + socket.getId() + " has connected.");
-
             socket.on("subscribe-room", args1 -> {
                 JSONObject obj = (JSONObject) args1[0];
 
                 roomId.set(obj.getString("roomId"));
 
                 JSONObject user = obj.getJSONObject("user");
-                System.out.println("User: " + user);
                 // Parse the user details
                 int id = user.getInt("id");
-                System.out.println("Client " + id + " is ready.");
+                userId.set((id));
+                System.out.println("Client " + userId.get() + " is ready at room " + roomId.get() + ", " + socket.getId() + ".");
                 socket.joinRoom(roomId.get());
-                if (rooms.get(roomId).size() == 1) {
-                    namespace.broadcast(roomId.get(), "request-canvas-state", JsonUtils.toJsonObj(new DrawMessageModel.User("1", true, "")));
-                } else {
-                    namespace.broadcast(roomId.get(), "request-canvas-state", JsonUtils.toJsonObj(new DrawMessageModel.User("1", false, "")));
-                }
+                namespace.broadcast(roomId.get(), "request-canvas-state", JsonUtils.toJsonObj(new DrawMessageModel.User(userId.get(), true, "")));
+
             });
 
             socket.on("canvas-state", args1 -> {
-                System.out.println("Client " + socket.getId() + " has sent canvas state.");
+                System.out.println("Client has sent canvas state.");
+                JSONObject obj = (JSONObject) args1[0];
+                String canvasState = obj.getString("canvasState");
+                System.out.println("Client has sent canvas state : " + canvasState);
                 namespace.broadcast(roomId.get(), "canvas-state-from-server", args1[0]);
             });
 
@@ -132,10 +135,10 @@ public class LobbySocketServerConfig {
             });
 
             socket.on("disconnect", args1 -> {
-                namespace.broadcast(roomId.get(), "disconnect", JsonUtils.toJsonObj(new DrawMessageModel.Message("Client " + socket.getId() + " has disconnected.")));
-                rooms.get(roomId.get()).remove(socket.getId());
+                namespace.broadcast(roomId.get(), "disconnect", JsonUtils.toJsonObj(new DrawMessageModel.Message("Client " + userId.get() + " has disconnected.")));
+                rooms.get(roomId.get()).remove(String.valueOf(userId.get()));
                 socket.disconnect(true);
-                System.out.println("Client " + socket.getId() + " has disconnected.");
+                System.out.println("Client " + userId.get() + " has disconnected from room.");
             });
         });
     }

@@ -9,11 +9,11 @@ public class DrawMessageModel {
         }
     };
     record User(
-            String userId,
+            int userId,
             boolean isPlayer,
             Object data) {
         @Override
-        public String userId() {
+        public int userId() {
             return userId;
         }
 
