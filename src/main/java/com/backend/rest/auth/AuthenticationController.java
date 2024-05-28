@@ -5,6 +5,8 @@ import com.backend.rest.ResponseGenerator;
 import com.backend.rest.auth.dto.AuthenticationResponse;
 import com.backend.rest.auth.dto.LoginRequest;
 import com.backend.rest.auth.dto.RegisterRequest;
+import com.backend.rest.auth.dto.UserInformationResponse;
+import com.backend.rest.auth.dto.UserRequest;
 import com.backend.rest.auth.exc.DuplicateUsernameExc;
 import com.backend.rest.user.User;
 import com.backend.rest.user.UserService;
@@ -15,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import javax.naming.AuthenticationException;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +42,13 @@ public class AuthenticationController {
     ) {
 
         return ResponseEntity.ok(service.authenticate(request));
+    }
+
+    @PostMapping("/userinfo")
+    public ResponseEntity<UserInformationResponse> getUserInformation(
+            @RequestBody UserRequest request
+    ) {
+        return ResponseEntity.ok(service.getUserInformation(request));
     }
 
     @ExceptionHandler

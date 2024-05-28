@@ -3,6 +3,8 @@ package com.backend.rest.auth;
 import com.backend.configuration.JwtService;
 import com.backend.rest.auth.dto.AuthenticationResponse;
 import com.backend.rest.auth.dto.LoginRequest;
+import com.backend.rest.auth.dto.UserInformationResponse;
+import com.backend.rest.auth.dto.UserRequest;
 import com.backend.rest.auth.dto.RegisterRequest;
 import com.backend.rest.auth.exc.DuplicateUsernameExc;
 import com.backend.rest.user.User;
@@ -51,6 +53,10 @@ public class AuthenticationService {
 
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
+                .id(user.getId())
+                .role(user.getRole())
+                .username(user.getUsername())
+                .displayName(user.getDisplayName())
                 .build();
     }
 
@@ -69,6 +75,24 @@ public class AuthenticationService {
         String jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
+                .id(user.getId())
+                .role(user.getRole())
+                .username(user.getUsername())
+                .displayName(user.getDisplayName())
                 .build();
+    }
+
+    public UserInformationResponse getUserInformation(UserRequest request) {
+
+        var user = repository.findByUsername(request.getUsername())
+                .orElseThrow();
+
+        return UserInformationResponse.builder()
+                .id(user.getId())
+                .role(user.getRole())
+                .username(user.getUsername())
+                .displayName(user.getDisplayName())
+                .build();
+
     }
 }

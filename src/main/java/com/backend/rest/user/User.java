@@ -96,6 +96,12 @@ public class User implements UserDetails {
         return username;
     }
 
+    public int getId() {return id;}
+
+    public Role getRole() {return role;}
+
+    public String getDisplayName() {return displayName;}
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
