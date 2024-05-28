@@ -8,6 +8,24 @@ public class DrawMessageModel {
             return message;
         }
     };
+
+    public record GuessMessage(
+            String message, String guessKeyword, Boolean isCorrect) {
+        @Override
+        public String message() {
+            return message;
+        }
+
+        @Override
+        public String guessKeyword() {
+            return guessKeyword;
+        }
+
+        @Override
+        public Boolean isCorrect() {
+            return isCorrect;
+        }
+    };
     public record User(
             int userId,
             boolean isPlayer,

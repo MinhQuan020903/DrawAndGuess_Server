@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
@@ -15,6 +16,8 @@ public class RoomManager {
     public static final int ROOM_CAPACITY = 10;
     public static final int NUMBER_OF_ROOMS = 10;
     private final ConcurrentHashMap<String, List<String>> rooms = new ConcurrentHashMap<>();
+    private final Random random = new Random();
+
 
     public RoomManager() {
         IntStream.rangeClosed(1, NUMBER_OF_ROOMS).forEach(i -> {
@@ -64,5 +67,14 @@ public class RoomManager {
         rooms.remove(roomId);
         System.out.println("Removed room: " + roomId);
         return true;
+    }
+
+    public String getRandomUserFromRoom(String roomId) {
+        List<String> room = rooms.get(roomId);
+        if (room == null || room.isEmpty()) {
+            return null; // Room does not exist or is empty
+        }
+        int randomIndex = random.nextInt(room.size());
+        return room.get(randomIndex);
     }
 }
