@@ -1,4 +1,4 @@
-package com.backend.socket.lobby;
+package com.backend.socket.model;
 
 public class UserModel {
     private String name;

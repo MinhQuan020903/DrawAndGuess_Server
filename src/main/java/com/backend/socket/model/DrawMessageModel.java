@@ -1,14 +1,14 @@
-package com.backend.socket.lobby;
+package com.backend.socket.model;
 
 public class DrawMessageModel {
-    record Message(
+    public record Message(
             String message) {
 
         String getMessage() {
             return message;
         }
     };
-    record User(
+    public record User(
             int userId,
             boolean isPlayer,
             Object data) {
@@ -27,7 +27,7 @@ public class DrawMessageModel {
             return data;
         }
         };
-    record Room(
+    public record Room(
             String roomId,
             Integer capacity,
             Integer currentCapacity) {
