@@ -63,7 +63,6 @@ public class LobbySocketServerConfig {
                 int id = user.getInt("id");
 
                 if (roomManager.roomExists(roomId.get()) && !roomManager.isRoomFull(roomId.get()) && !roomManager.getRoom(roomId.get()).contains(String.valueOf(id))) {
-                    roomManager.addUserToRoom(roomId.get(), String.valueOf(id));
                     socket.send("room-joined", roomId.get());
                 } else {
                     socket.send("room-full", roomId.get());

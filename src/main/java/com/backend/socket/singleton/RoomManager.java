@@ -1,5 +1,6 @@
 package com.backend.socket.singleton;
 
+import com.backend.socket.model.Player;
 import com.backend.utils.HashUtils;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ import java.util.stream.IntStream;
 public class RoomManager {
     public static final int ROOM_CAPACITY = 10;
     public static final int NUMBER_OF_ROOMS = 10;
-    private final ConcurrentHashMap<String, List<String>> rooms = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, List<Player>> rooms = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
 
@@ -31,16 +32,28 @@ public class RoomManager {
         }
     }
 
-    public List<String> getRoom(String roomId) {
+    public List<Player> getRoom(String roomId) {
         return rooms.get(roomId);
     }
 
-    public void addUserToRoom(String roomId, String userId) {
-        rooms.get(roomId).add(userId);
+    public void addUserToRoom(String roomId, Player user) {
+        rooms.get(roomId).add(user);
     }
 
-    public void removeUserFromRoom(String roomId, String userId) {
-        rooms.get(roomId).remove(userId);
+    public boolean isPlayerInRoom(String roomId, int userId) {
+        return rooms.get(roomId).stream().anyMatch(user -> user.getId() == userId);
+    }
+
+    public void removeUserFromRoom(String roomId, Player user) {
+        rooms.get(roomId).remove(user);
+    }
+
+    public void removeUserFromRoomWithId(String roomId, int userId) {
+        rooms.get(roomId).removeIf(user -> user.getId() == userId);
+    }
+
+    public void removeLastUserFromRoom(String roomId) {
+        rooms.get(roomId).removeFirst();
     }
 
     public boolean roomExists(String roomId) {
@@ -69,8 +82,8 @@ public class RoomManager {
         return true;
     }
 
-    public String getRandomUserFromRoom(String roomId) {
-        List<String> room = rooms.get(roomId);
+    public Player getRandomUserFromRoom(String roomId) {
+        List<Player> room = rooms.get(roomId);
         if (room == null || room.isEmpty()) {
             return null; // Room does not exist or is empty
         }
