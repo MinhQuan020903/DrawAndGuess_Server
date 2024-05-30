@@ -10,7 +10,12 @@ public class DrawMessageModel {
     };
 
     public record GuessMessage(
-            String message, String guessKeyword, Boolean isCorrect) {
+            Integer userId, String message, String guessKeyword,  Boolean isCorrect, Integer guessPoint) {
+
+        @Override
+        public Integer userId() {
+            return userId;
+        }
         @Override
         public String message() {
             return message;
@@ -21,9 +26,16 @@ public class DrawMessageModel {
             return guessKeyword;
         }
 
+
+
         @Override
         public Boolean isCorrect() {
             return isCorrect;
+        }
+
+        @Override
+        public Integer guessPoint() {
+            return guessPoint;
         }
     };
     public record User(
