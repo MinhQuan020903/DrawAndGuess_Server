@@ -1,5 +1,7 @@
 package com.backend.socket.draw;
 
+import com.backend.rest.room.RoomService;
+import com.backend.rest.topic.Topic;
 import com.backend.rest.topic.TopicService;
 import com.backend.socket.model.Detail;
 import com.backend.socket.model.DrawMessageModel;
@@ -20,8 +22,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @Configuration
 public class DrawSocketServerConfig {
 
-    // Example of keyword for guessing game
-    private String keyword = "apple";
     @Autowired
     private SocketIoServer sioServer;
 
@@ -31,16 +31,18 @@ public class DrawSocketServerConfig {
     @Autowired
     private TopicService topicService;
 
-    private final Map<String, Timer> gameTimers = new HashMap<>();
+    private final Random random = new Random();
 
     @PostConstruct
     public void registerRoomNamespace() {
         System.out.println("Creating draw socket server.");
         var namespace = sioServer.namespace("/draw");
-        AtomicReference<String> roomId = new AtomicReference<>("");
+        AtomicReference<Integer> roomId = new AtomicReference<>(1);
         AtomicReference<Integer> userId = new AtomicReference<>(0);
         AtomicReference<Player> player = new AtomicReference<>(new Player());
         AtomicReference<Player> drawer = new AtomicReference<>(new Player());
+        AtomicReference<String> keyword = new AtomicReference<>("");
+
 
         AtomicReference<Integer> countCorrectGuess = new AtomicReference<>(0);
 
@@ -51,7 +53,7 @@ public class DrawSocketServerConfig {
                 JSONObject obj = (JSONObject) args1[0];
 
                 // Get roomId
-                roomId.set(obj.getString("roomId"));
+                roomId.set(obj.getInt("roomId"));
                 // Get userinfo
                 JSONObject user = obj.getJSONObject("user");
                 int id = user.getInt("id");
@@ -63,24 +65,25 @@ public class DrawSocketServerConfig {
                 // Add player to room
                 if (!roomManager.isPlayerInRoom(roomId.get(), player.get().getId())) {
                     // Join room
-                    socket.joinRoom(roomId.get());
+                    socket.joinRoom(String.valueOf(roomId.get()));
+                    System.out.println("Added socket:" + socket.getId() + " to room " + roomId.get());
                     // Notify the room
                     //JSON object to send to client
-                    roomManager.addUserToRoom(roomId.get(), player.get());
+                    roomManager.addUserToRoomById(roomId.get(), player.get());
                 }
-                List<Player> roomPlayers = roomManager.getRoom(roomId.get());
+                List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
                 JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
-                namespace.broadcast(roomId.get(), "subscribed", roomPlayersJson);
-                System.out.println("Size of room " + roomId.get() + " is " + roomManager.getRoom(roomId.get()).size());
+                namespace.broadcast(String.valueOf(roomId.get()), "subscribed", roomPlayersJson);
+                System.out.println("Size of room " + roomId.get() + " is " + roomManager.getRoomById(roomId.get()).size());
                 System.out.println("Client " + player.get().getDetail().getUsername() + " is ready at room " + roomId.get());
             });
 
             socket.on("start-game", args1 -> {
                 // Pick randomly a user from a room to be the drawer
-                System.out.println("Starting game in room " + roomId.get() + ", size: " + roomManager.getRoom(roomId.get()).size());
+                System.out.println("Starting game in room " + roomId.get() + ", size: " + roomManager.getRoomById(roomId.get()).size());
                 drawer.set(roomManager.getRandomUserFromRoom(roomId.get()));
                 // Get the player list from room
-                List<Player> roomPlayers = roomManager.getRoom(roomId.get());
+                List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
                 for (Player p : roomPlayers) {
                     if (Objects.equals(p.getId(), drawer.get().getId())) {
                         p.setCurrentTurn(true);
@@ -91,14 +94,13 @@ public class DrawSocketServerConfig {
                     }
                 }
                 System.out.println("Room " + roomId.get() + " is playing!");
-                namespace.broadcast(roomId.get(), "server-start-game", JsonUtils.toJsonObj(new DrawMessageModel.User((drawer.get().getId()), true, "")));
+                namespace.broadcast(String.valueOf(roomId.get()), "server-start-game", JsonUtils.toJsonObj(new DrawMessageModel.User((drawer.get().getId()), true, "")));
                 // Send the player list to client
                 // Serialize the player list to JSON array
                 JSONArray roomPlayersJson;
                 try {
                     roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
-                    System.out.println("Room players JSON: " + roomPlayersJson);
-                    namespace.broadcast(roomId.get(), "server-list-players", roomPlayersJson);
+                    namespace.broadcast(String.valueOf(roomId.get()), "server-list-players", roomPlayersJson);
                 } catch (Exception e) {
                     System.err.println("Failed to serialize room players to JSON: " + e.getMessage());
                     e.printStackTrace();}
@@ -106,15 +108,31 @@ public class DrawSocketServerConfig {
             });
 
             socket.on("end-game", args1 -> {
-                Integer drawerScore = Math.round((float) countCorrectGuess.get() * 100 / (roomManager.getRoom(roomId.get()).size() - 1));
-                roomManager.getRoom(roomId.get()).forEach(player1 -> {
+                Integer drawerScore = Math.round((float) countCorrectGuess.get() * 100 / (roomManager.getRoomById(roomId.get()).size() - 1));
+                roomManager.getRoomById(roomId.get()).forEach(player1 -> {
                     if (player1.getId() == drawer.get().getId()){
                         player1.setPoints(player1.getPoints() + drawerScore);
                     }
                 });
 
-                namespace.broadcast(roomId.get(), "drawer-score", JsonUtils.toJsonObj(new DrawMessageModel.GuessMessage(drawer.get().getId(),"", "", false, drawerScore)));
+                namespace.broadcast(String.valueOf(roomId.get()), "drawer-score", JsonUtils.toJsonObj(new DrawMessageModel.GuessMessage(drawer.get().getId(),"", "", false, drawerScore)));
                 countCorrectGuess.set(0);
+
+                //Check if there are any players with score >= maxScore
+                List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
+                if (roomPlayers.stream().anyMatch(player1 -> player1.getPoints() >= roomManager.getRoomDetailById(roomId.get()).getMaxScore())) {
+
+                    Player winner = roomPlayers.getFirst();
+                    for (Player p : roomPlayers) {
+                        if (p.getPoints() > winner.getPoints() && p.getPoints() >= roomManager.getRoomDetailById(roomId.get()).getMaxScore()) {
+                            winner = p;
+                        }
+                    }
+                    System.out.println("Found a winner:" + winner);
+                    //Send the winner to all clients
+                    namespace.broadcast(String.valueOf(roomId.get()), "found-winner", JsonUtils.toJsonObj(winner));
+                }
+
             });
 
             socket.on("canvas-state", args1 -> {
@@ -122,20 +140,34 @@ public class DrawSocketServerConfig {
                 JSONObject obj = (JSONObject) args1[0];
                 String canvasState = obj.getString("canvasState");
                 System.out.println("Client has sent canvas state: " + canvasState);
-                namespace.broadcast(roomId.get(), "canvas-state-from-server", args1[0]);
+                namespace.broadcast(String.valueOf(roomId.get()), "canvas-state-from-server", args1[0]);
             });
 
             socket.on("draw-line", args1 -> {
-                namespace.broadcast(roomId.get(), "request-canvas-state", JsonUtils.toJsonObj(new DrawMessageModel.User(userId.get(), true, "")));
-                socket.broadcast(roomId.get(), "draw-line", args1[0]);
+                namespace.broadcast(String.valueOf(roomId.get()), "request-canvas-state", JsonUtils.toJsonObj(new DrawMessageModel.User(userId.get(), true, "")));
+                socket.broadcast(String.valueOf(roomId.get()), "draw-line", args1[0]);
             });
 
             socket.on("clear", args1 -> {
-                namespace.broadcast(roomId.get(), "clear", "clearing canvas");
+                namespace.broadcast(String.valueOf(roomId.get()), "clear", "clearing canvas");
+            });
+
+            socket.on("get-room-detail", args1 -> {
+                namespace.broadcast(String.valueOf(roomId.get()), "room-detail", JsonUtils.toJsonObj(roomManager.getRoomDetailById(roomId.get())));
             });
 
             socket.on("get-keyword", args1 -> {
-                socket.send("keyword", JsonUtils.toJsonObj(new DrawMessageModel.Message(keyword)));
+                try {
+                    Topic topic = topicService.getTopicById(roomManager.getRoomDetailById(roomId.get()).getTopicId());
+
+                    String[] words = topic.getWords();
+                    keyword.set(words[random.nextInt(words.length)]);
+                } catch (Exception e) {
+                    System.err.println("Failed to get keyword: " + e.getMessage());
+                    e.printStackTrace();
+                }
+
+                socket.send("keyword", JsonUtils.toJsonObj(new DrawMessageModel.Message(keyword.get())));
             });
 
             socket.on("send-guess", args1 -> {
@@ -145,30 +177,42 @@ public class DrawSocketServerConfig {
                 String username = obj.getString("username");
                 Integer guessPoint = obj.getInt("guessPoint");
 
-                if (guess.equalsIgnoreCase(keyword)) {
-                    roomManager.getRoom(roomId.get()).forEach(player1 -> {
+                if (guess.equalsIgnoreCase(keyword.get())) {
+                    roomManager.getRoomById(roomId.get()).forEach(player1 -> {
                         if (player1.getId() == id) {
                             player1.setPoints(player1.getPoints() + guessPoint);
                         }
                     });
                     countCorrectGuess.set(countCorrectGuess.get() + 1);
-                    namespace.broadcast(roomId.get(), "validate-guess", JsonUtils.toJsonObj(new DrawMessageModel.GuessMessage(id,"User " + username + " has guessed the word correctly!", guess,true, guessPoint)));
+                    namespace.broadcast(String.valueOf(roomId.get()), "validate-guess", JsonUtils.toJsonObj(new DrawMessageModel.GuessMessage(id,"User " + username + " has guessed the word correctly!", guess,true, guessPoint)));
                 } else {
-                    namespace.broadcast(roomId.get(), "validate-guess", JsonUtils.toJsonObj(new DrawMessageModel.GuessMessage(id,"User " + username + " has guessed the word: ", guess, false, 0)));
+                    namespace.broadcast(String.valueOf(roomId.get()), "validate-guess", JsonUtils.toJsonObj(new DrawMessageModel.GuessMessage(id,"User " + username + " has guessed the word: ", guess, false, 0)));
                 }
             });
 
-            socket.on("disconnect", args1 -> {
-                if (roomManager.getRoom(roomId.get()).size() == 1) {
-                    roomManager.removeLastUserFromRoom(roomId.get());
-                } else {
-                    roomManager.removeUserFromRoomWithId(roomId.get(), (userId.get()));
-                    List<Player> roomPlayers = roomManager.getRoom(roomId.get());
-                    JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
-                    namespace.broadcast(roomId.get(), "player-disconnect", roomPlayersJson);
-                    System.out.println("Client " + userId.get() + " has disconnected from room.");
-                }
+            socket.on("exit-room", args1 -> {
+                JSONObject obj = (JSONObject) args1[0];
+                Integer id = obj.getInt("id");
+                roomManager.removeUserFromRoomWithId(roomId.get(), (id));
+                List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
+                JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
+                namespace.broadcast(String.valueOf(roomId.get()), "player-disconnect", roomPlayersJson);
+                System.out.println("Client " + userId.get() + " has disconnected from room.");
             });
+
+
+
+//            socket.on("disconnect", args1 -> {
+//                if (roomManager.getRoomById(roomId.get()).size() == 1) {
+//                    roomManager.removeLastUserFromRoom(roomId.get());
+//                } else {
+//                    roomManager.removeUserFromRoomWithId(roomId.get(), (userId.get()));
+//                    List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
+//                    JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
+//                    namespace.broadcast(String.valueOf(roomId.get()), "player-disconnect", roomPlayersJson);
+//                    System.out.println("Client " + userId.get() + " has disconnected from room.");
+//                }
+//            });
         });
     }
 
