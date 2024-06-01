@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.parameters.P;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Configuration
@@ -28,8 +29,11 @@ public class LobbySocketServerConfig {
     @Autowired
     private TopicService topicService;
 
+    // Map to store userId based on socketId
+    private final ConcurrentHashMap<String, Integer> socketIdToUserIdMap = new ConcurrentHashMap<>();
+
     private ArrayList<JSONObject> getRoomList() {
-        ArrayList<JSONObject>  roomsList = new ArrayList<JSONObject>();
+        ArrayList<JSONObject> roomsList = new ArrayList<>();
         roomManager.getRooms().forEach((room, userList) -> {
             if (room.isPublic()) {
                 var roomObj = new JSONObject();
@@ -48,27 +52,33 @@ public class LobbySocketServerConfig {
     public void registerLobbyNamespace() {
         System.out.println("Creating lobby socket server.");
         var namespace = sioServer.namespace("/lobby");
-        AtomicReference<Integer> roomId = new AtomicReference<>(1);
-        AtomicReference<Integer> userId = new AtomicReference<>(0);
         String lobbyNamespace = "lobby";
         namespace.on("connection", args -> {
             var socket = (SocketIoSocket) args[0];
+            String socketId = socket.getId();
             socket.on("subscribe-lobby", args1 -> {
-                //Get userinfo
+                // Get userinfo
                 JSONObject userObj = (JSONObject) args1[0];
                 JSONObject user = userObj.getJSONObject("user");
-                int id = user.getInt("id");
+                int user_id = user.getInt("id");
                 String username = user.getString("username");
-                userId.set(id);
+
+                //Check if user is already subscribed to lobby
+                if (socketIdToUserIdMap.containsValue(user_id)) {
+                    return;
+                }
+
+                // Store userId based on socketId
+                socketIdToUserIdMap.put(socketId, user_id);
 
                 socket.joinRoom(lobbyNamespace);
-                //Get roomlist to show in lobby
-                System.out.println("Client " + userId.get() + ", " + username + " subscribed to lobby.");
-
-                namespace.broadcast( lobbyNamespace,"rooms-list", getRoomList().toString());
+                // Get roomlist to show in lobby
+                System.out.println("Client " + user_id + ", " + username + " subscribed to lobby.");
+                System.out.println("Lobby size: " + socketIdToUserIdMap.size());
+                namespace.broadcast(lobbyNamespace, "rooms-list", getRoomList().toString());
             });
 
-            socket.on("create-room", args1 ->{
+            socket.on("create-room", args1 -> {
                 JSONObject obj = (JSONObject) args1[0];
                 int topicId = obj.getInt("topicId");
                 int capacity = obj.getInt("capacity");
@@ -82,30 +92,32 @@ public class LobbySocketServerConfig {
             });
 
             socket.on("join-room", args1 -> {
-
-                //Get room info that user wants to join
+                // Get room info that user wants to join
                 JSONObject obj = (JSONObject) args1[0];
-
-                int room_id = obj.getInt("roomId");
-                roomId.set(room_id);
-
-                //Get userinfo
+                int roomIdToJoin = obj.getInt("roomId");
+                // Get userinfo
                 JSONObject user = obj.getJSONObject("user");
-                int id = user.getInt("id");
-                userId.set(id);
+                int user_id = user.getInt("id");
 
-                if (roomManager.roomExists(roomId.get()) && !roomManager.isRoomFull(roomId.get()) && !roomManager.isPlayerInRoom(roomId.get(), userId.get())) {
-                    socket.send("room-joined", roomId.get());
+                if (roomManager.roomExists(roomIdToJoin) && !roomManager.isRoomFull(roomIdToJoin) && !roomManager.isPlayerInRoom(roomIdToJoin, user_id)) {
+                    socket.send("room-joined", roomIdToJoin);
                 } else {
-                    socket.send("room-full", roomId.get());
+                    socket.send("room-full", roomIdToJoin);
                 }
             });
 
             socket.on("disconnect", args1 -> {
+
+                //Get user id based on socketId
+                var user_id = socketIdToUserIdMap.get(socketId);
+                // Remove userId from map on disconnect
+                socketIdToUserIdMap.remove(socketId);
+
                 socket.disconnect(true);
                 namespace.broadcast(lobbyNamespace, "rooms-list", getRoomList().toString());
-                namespace.broadcast(lobbyNamespace, "disconnect", JsonUtils.toJsonObj(new DrawMessageModel.Message("Client " + userId.get() + " has disconnected.")));
-                System.out.println("Client " + userId.get() + " has disconnected from lobby.");
+                namespace.broadcast(lobbyNamespace, "disconnect", JsonUtils.toJsonObj(new DrawMessageModel.Message("Client " + user_id + " has disconnected.")));
+                System.out.println("Client " + user_id + " has disconnected from lobby.");
+                System.out.println("Lobby size: " + socketIdToUserIdMap.size());
             });
         });
     }
