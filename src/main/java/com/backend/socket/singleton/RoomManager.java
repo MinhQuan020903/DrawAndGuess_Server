@@ -130,13 +130,15 @@ public class RoomManager {
         return false;
     }
 
-    public boolean addRoom(Room room) {
-        if (!rooms.containsKey(room)) {
-            rooms.put(room, new ArrayList<>());
-            System.out.println("Added room: " + room);
-            return true;
-        }
-        return false;
+    public Room createRoom(Integer topicId, Integer capacity, Integer maxScore, Boolean isPublic, String username) {
+        MakeRoomRequest makeRoomRequest = new MakeRoomRequest();
+        makeRoomRequest.setCapacity(capacity);
+        makeRoomRequest.setPublic(isPublic);
+        makeRoomRequest.setTopicId(topicId);
+        makeRoomRequest.setMaxScore(maxScore);
+        Room room = roomService.makeRoom(username, makeRoomRequest);
+        rooms.put(room, new ArrayList<>());
+        return room;
     }
 
     public boolean removeRoom(Room room) {
