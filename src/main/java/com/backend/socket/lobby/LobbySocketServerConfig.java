@@ -1,5 +1,6 @@
 package com.backend.socket.lobby;
 
+import com.backend.rest.room.entity.Room;
 import com.backend.rest.topic.TopicService;
 import com.backend.socket.model.DrawMessageModel;
 import com.backend.socket.singleton.RoomManager;
@@ -30,13 +31,16 @@ public class LobbySocketServerConfig {
     private ArrayList<JSONObject> getRoomList() {
         ArrayList<JSONObject>  roomsList = new ArrayList<JSONObject>();
         roomManager.getRooms().forEach((room, userList) -> {
-            var roomObj = new JSONObject();
-            roomObj.put("id", room.getRoomId());
-            roomObj.put("capacity", room.getCapacity());
-            roomObj.put("currentCapacity", userList.size());
-            roomObj.put("topic", topicService.getTopicById(room.getTopicId()).getName());
-            roomsList.add(roomObj);
+            if (room.isPublic()) {
+                var roomObj = new JSONObject();
+                roomObj.put("id", room.getRoomId());
+                roomObj.put("capacity", room.getCapacity());
+                roomObj.put("currentCapacity", userList.size());
+                roomObj.put("topic", topicService.getTopicById(room.getTopicId()).getName());
+                roomsList.add(roomObj);
+            }
         });
+        roomsList.sort((o1, o2) -> o1.getInt("id") - o2.getInt("id"));
         return roomsList;
     }
 
@@ -62,6 +66,19 @@ public class LobbySocketServerConfig {
                 System.out.println("Client " + userId.get() + ", " + username + " subscribed to lobby.");
 
                 namespace.broadcast( lobbyNamespace,"rooms-list", getRoomList().toString());
+            });
+
+            socket.on("create-room", args1 ->{
+                JSONObject obj = (JSONObject) args1[0];
+                int topicId = obj.getInt("topicId");
+                int capacity = obj.getInt("capacity");
+                int maxScore = obj.getInt("maxScore");
+                boolean isPublic = obj.getBoolean("isPublic");
+                String username = obj.getString("username");
+
+                Room createdRoom = roomManager.createRoom(topicId, capacity, maxScore, isPublic, username);
+                socket.send("room-created", createdRoom.getRoomId());
+                namespace.broadcast(lobbyNamespace, "rooms-list", getRoomList().toString());
             });
 
             socket.on("join-room", args1 -> {

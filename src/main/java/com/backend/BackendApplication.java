@@ -28,7 +28,7 @@ public class BackendApplication {
 	) {
 		return args -> {
 
-			String[] fruits = {"Orange", "Banana", "Mango", "Kiwi"};
+			String[] fruits = {"Orange", "Banana", "Mango", "Kiwi", "Apple", "Pineapple", "Strawberry", "Pea", "Tomato", "Carrot", "Cucumber", "Potato", "Onion", "Garlic"};
 			String[] nationalFlag = {"VietNam", "Germany", "Mexico", "Japan", "Canada", "Australia", "Brazil"};
 
 			Topic fruitTopic = Topic

@@ -79,6 +79,14 @@ public class DrawSocketServerConfig {
             });
 
             socket.on("start-game", args1 -> {
+
+                JSONObject obj = (JSONObject) args1[0];
+                System.out.println("Starting game with data: " + obj.toString());
+                // Check if this is a new game
+                //If true, reset all players' points
+                if (obj.getBoolean("newGame")) {
+                    roomManager.getRoomById(roomId.get()).forEach(player1 -> player1.setPoints(0));
+                }
                 // Pick randomly a user from a room to be the drawer
                 System.out.println("Starting game in room " + roomId.get() + ", size: " + roomManager.getRoomById(roomId.get()).size());
                 drawer.set(roomManager.getRandomUserFromRoom(roomId.get()));
@@ -129,6 +137,8 @@ public class DrawSocketServerConfig {
                         }
                     }
                     System.out.println("Found a winner:" + winner);
+                    //Reset all players' points
+//                    roomPlayers.forEach(player1 -> player1.setPoints(0));
                     //Send the winner to all clients
                     namespace.broadcast(String.valueOf(roomId.get()), "found-winner", JsonUtils.toJsonObj(winner));
                 }
