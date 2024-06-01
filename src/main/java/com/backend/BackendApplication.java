@@ -28,13 +28,54 @@ public class BackendApplication {
 	) {
 		return args -> {
 
-			String[] fruits = {"Orange", "Banana", "Mango", "Kiwi"};
+			String[] fruits = {"Orange", "Banana", "Mango", "Kiwi", "Apple", "Grapes", "Pineapple", "Strawberry", "Watermelon", "Peach"};
 			String[] nationalFlag = {"VietNam", "Germany", "Mexico", "Japan", "Canada", "Australia", "Brazil"};
+			String[] animals = {"Dog", "Cat", "Mouse", "Chicken", "Cow", "Pig", "Goat", "Duck", "Rabbit", "Horse", "Parrot"};
+
+			String[] programmingLanguages = {
+					"Java",
+					"Python",
+					"C++",
+					"JavaScript",
+					"C#",
+					"PHP",
+					"Ruby",
+					"Swift",
+					"Go",
+					"Kotlin"
+			};
+
+			String[] anime = {
+					"Naruto",
+					"One Piece",
+					"Dragon Ball",
+					"Attack on Titan",
+					"My Hero Academia",
+					"Death Note",
+					"Fullmetal Alchemist",
+					"Sword Art Online",
+					"Demon Slayer",
+					"Tokyo Ghoul"
+			};
+
+			String[] pokemon = {
+					"Pikachu",
+					"Charizard",
+					"Bulbasaur",
+					"Squirtle",
+					"Jigglypuff",
+					"Meowth",
+					"Eevee",
+					"Mewtwo",
+					"Snorlax",
+					"Gengar"
+			};
+
 
 			Topic fruitTopic = Topic
 					.builder()
 					.name("Fruits")
-					.illustrationUrl("https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.mooringspark.org%2Fnews%2Fhealth-benefits-of-your-favorite-fruits&psig=AOvVaw0oD6-yS89dSV1uf6PZDYZc&ust=1714707009233000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCOCVvcWD7oUDFQAAAAAdAAAAABAE")
+					.illustrationUrl("https://www.mooringspark.org/hs-fs/hubfs/bigstock-Fresh-Fruits-assorted-Fruits-C-365480089%20Large.jpeg")
 					.note("Lorem ipsum dolor sit amet, consectetur adipiscing elit")
 					.words(fruits)
 					.build();
@@ -47,8 +88,44 @@ public class BackendApplication {
 					.words(nationalFlag)
 					.build();
 
+			Topic animalTopic = Topic
+					.builder()
+					.name("Animals")
+					.illustrationUrl("https://media.newyorker.com/photos/62c4511e47222e61f46c2daa/4:3/w_2663,h_1997,c_limit/shouts-animals-watch-baby-hemingway.jpg")
+					.note("Aliquam varius faucibus erat, quis consequat odio semper eu")
+					.words(animals)
+					.build();
+
+			Topic programmingLanguagesTopic = Topic
+					.builder()
+					.name("Programming Languages")
+					.illustrationUrl("https://i.pinimg.com/originals/8e/23/1e/8e231e0aa5c7acb23e299ae2f4889fbe.png")
+					.note("Ut fringilla non quam vel lacinia")
+					.words(programmingLanguages)
+					.build();
+
+			Topic animeTopic = Topic
+					.builder()
+					.name("Anime")
+					.illustrationUrl("https://i.ytimg.com/vi/xXmXM0qRMbo/hq720.jpg")
+					.note("Phasellus elementum dignissim dignissim")
+					.words(anime)
+					.build();
+
+			Topic pokemonTopic = Topic
+					.builder()
+					.name("Pokemon")
+					.illustrationUrl("https://yt3.googleusercontent.com/wzEypbVsmY9BI-IbLwVius4UvC2rejtJB_PTXAdPpYXQ07EIjl5Ms55NCFq_dILwONpxrzE2xA=s900-c-k-c0x00ffffff-no-rj")
+					.note("Praesent ac mi eleifend, consectetur lorem imperdiet, tincidunt purus")
+					.words(pokemon)
+					.build();
+
 			topicService.save(fruitTopic);
 			topicService.save(nationalFlagTopic);
+			topicService.save(animalTopic);
+			topicService.save(pokemonTopic);
+			topicService.save(programmingLanguagesTopic);
+			topicService.save(animeTopic);
 			System.out.println("Generated TOPIC Data");
 
 			var userA = RegisterRequest.builder()
