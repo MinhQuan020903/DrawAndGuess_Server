@@ -117,6 +117,13 @@ public class RoomController {
         return ResponseEntity.ok(extractUsername + " has joined room " + roomId);
     }
 
+    @PostMapping("/{roomId}/leave")
+    public ResponseEntity<String> leaveRoom(@PathVariable int roomId, HttpServletRequest request) throws Exception {
+        String extractUsername = getUsernameFromRequestToken(request);
+        roomService.leaveRoom(roomId, extractUsername);
+        return ResponseEntity.ok(extractUsername + " has left room " + roomId);
+    }
+
     private String getUsernameFromRequestToken(HttpServletRequest request) {
         final String authHeader = request.getHeader("Authorization");
 
