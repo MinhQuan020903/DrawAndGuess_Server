@@ -5,8 +5,10 @@ import com.backend.rest.room.dto.MakeRoomRequest;
 import com.backend.rest.room.entity.Room;
 import com.backend.rest.topic.TopicService;
 import com.backend.socket.model.Player;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.stream.IntStream;
 
 @Getter
 @Component
+@DependsOn("setupTopicsAndUsers")
 public class RoomManager {
     public static final int ROOM_CAPACITY = 10;
     public static final int NUMBER_OF_ROOMS = 10;
@@ -30,19 +33,24 @@ public class RoomManager {
     @Autowired
     private final TopicService topicService;
 
-
     public RoomManager(RoomService roomService, TopicService topicService) {
-
         this.roomService = roomService;
         this.topicService = topicService;
-        //Create room
+    }
+
+    public void initialize() {
+        createRooms();
+    }
+
+    private void createRooms() {
         IntStream.rangeClosed(1, NUMBER_OF_ROOMS).forEach(i -> {
-//            String roomName = "room" + i;
-//            String hashedRoomName = HashUtils.hashRoomName(roomName);
+            if (topicService.getAllTopic().isEmpty()) {
+                return;
+            }
             MakeRoomRequest makeRoomRequest = new MakeRoomRequest();
             makeRoomRequest.setCapacity(ROOM_CAPACITY);
             makeRoomRequest.setPublic(true);
-            makeRoomRequest.setTopicId(random.nextInt(2) + 1);
+            makeRoomRequest.setTopicId(random.nextInt(topicService.getAllTopic().size()) + 1);
             makeRoomRequest.setMaxScore(300);
             Room room = roomService.makeRoom("", makeRoomRequest);
             rooms.put(room, new ArrayList<>());
@@ -52,6 +60,7 @@ public class RoomManager {
             System.out.println("Room: " + entry.getKey() + " has " + entry.getValue().size() + " clients.");
         }
     }
+
 
     public Room getRoomDetailById(int roomId) {
         for (Map.Entry<Room, List<Player>> entry : rooms.entrySet()) {
@@ -96,10 +105,11 @@ public class RoomManager {
         }
     }
 
-    public void removeUserFromRoomWithId(int roomId, int userId) {
+    public void removeUserFromRoomWithId(int roomId, int userId) throws Exception {
         for (Map.Entry<Room, List<Player>> entry : rooms.entrySet()) {
             if ((entry.getKey().getRoomId()) == (roomId)) {
                 entry.getValue().removeIf(user -> user.getId() == userId);
+                roomService.leaveRoom(roomId, String.valueOf(userId));
             }
         }
     }

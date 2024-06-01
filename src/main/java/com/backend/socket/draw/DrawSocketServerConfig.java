@@ -203,7 +203,11 @@ public class DrawSocketServerConfig {
             socket.on("exit-room", args1 -> {
                 JSONObject obj = (JSONObject) args1[0];
                 Integer id = obj.getInt("id");
-                roomManager.removeUserFromRoomWithId(roomId.get(), (id));
+                try {
+                    roomManager.removeUserFromRoomWithId(roomId.get(), (id));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
                 JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
                 namespace.broadcast(String.valueOf(roomId.get()), "player-disconnect", roomPlayersJson);
@@ -216,7 +220,11 @@ public class DrawSocketServerConfig {
                 if (roomManager.getRoomById(roomId.get()).size() == 1) {
                     roomManager.removeLastUserFromRoom(roomId.get());
                 } else {
-                    roomManager.removeUserFromRoomWithId(roomId.get(), (userId.get()));
+                    try {
+                        roomManager.removeUserFromRoomWithId(roomId.get(), (userId.get()));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                     List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
                     JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
                     namespace.broadcast(String.valueOf(roomId.get()), "player-disconnect", roomPlayersJson);
