@@ -212,17 +212,17 @@ public class DrawSocketServerConfig {
 
 
 
-//            socket.on("disconnect", args1 -> {
-//                if (roomManager.getRoomById(roomId.get()).size() == 1) {
-//                    roomManager.removeLastUserFromRoom(roomId.get());
-//                } else {
-//                    roomManager.removeUserFromRoomWithId(roomId.get(), (userId.get()));
-//                    List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
-//                    JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
-//                    namespace.broadcast(String.valueOf(roomId.get()), "player-disconnect", roomPlayersJson);
-//                    System.out.println("Client " + userId.get() + " has disconnected from room.");
-//                }
-//            });
+            socket.on("disconnect", args1 -> {
+                if (roomManager.getRoomById(roomId.get()).size() == 1) {
+                    roomManager.removeLastUserFromRoom(roomId.get());
+                } else {
+                    roomManager.removeUserFromRoomWithId(roomId.get(), (userId.get()));
+                    List<Player> roomPlayers = roomManager.getRoomById(roomId.get());
+                    JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
+                    namespace.broadcast(String.valueOf(roomId.get()), "player-disconnect", roomPlayersJson);
+                    System.out.println("Client " + userId.get() + " has disconnected from room.");
+                }
+            });
         });
     }
 
