@@ -8,11 +8,14 @@ import com.backend.rest.topic.TopicService;
 import com.backend.rest.user.Role;
 import com.backend.rest.user.User;
 import com.backend.rest.user.UserService;
+import com.backend.socket.singleton.RoomManager;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.annotation.Order;
 
 @SpringBootApplication
 public class BackendApplication {
