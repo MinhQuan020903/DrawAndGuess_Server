@@ -85,7 +85,6 @@ public class EngineIoHandler implements HandshakeInterceptor, WebSocketHandler {
                 }
             }
             if (verifyToken(token)) {
-                System.out.println("Token is valid");
                 return true; // Token is valid
             }
         } else {

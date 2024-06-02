@@ -25,7 +25,7 @@ public class BackendApplication {
 	}
 
 	@Bean
-	public CommandLineRunner setupTopicsAndUsers(
+	public CommandLineRunner commandLineRunner(
 			TopicService topicService,
 			AuthenticationService authenticationService
 	) {
@@ -159,12 +159,4 @@ public class BackendApplication {
 			System.out.println("Swagger: : http://localhost:8081/swagger-ui/index.html#/");
 		};
 	};
-
-	@Bean
-	public CommandLineRunner initializeRoomManager(RoomManager roomManager) {
-		return args -> {
-			roomManager.initialize();
-			System.out.println("RoomManager initialized");
-		};
-	}
 }

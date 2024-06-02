@@ -39,7 +39,7 @@ public class LobbySocketServerConfig {
                 var roomObj = new JSONObject();
                 roomObj.put("id", room.getRoomId());
                 roomObj.put("capacity", room.getCapacity());
-                roomObj.put("currentCapacity", userList.size());
+                roomObj.put("currentCapacity", userList.getPlayers().size());
                 roomObj.put("topic", topicService.getTopicById(room.getTopicId()).getName());
                 roomsList.add(roomObj);
             }
@@ -63,18 +63,11 @@ public class LobbySocketServerConfig {
                 int user_id = user.getInt("id");
                 String username = user.getString("username");
 
-                //Check if user is already subscribed to lobby
-                if (socketIdToUserIdMap.containsValue(user_id)) {
-                    return;
-                }
-
-                // Store userId based on socketId
+                // Replace old socket with the new one
                 socketIdToUserIdMap.put(socketId, user_id);
 
                 socket.joinRoom(lobbyNamespace);
                 // Get roomlist to show in lobby
-                System.out.println("Client " + user_id + ", " + username + " subscribed to lobby.");
-                System.out.println("Lobby size: " + socketIdToUserIdMap.size());
                 namespace.broadcast(lobbyNamespace, "rooms-list", getRoomList().toString());
             });
 
@@ -108,16 +101,17 @@ public class LobbySocketServerConfig {
 
             socket.on("disconnect", args1 -> {
 
-                //Get user id based on socketId
-                var user_id = socketIdToUserIdMap.get(socketId);
-                // Remove userId from map on disconnect
-                socketIdToUserIdMap.remove(socketId);
+                try {
+                    //Get user id based on socketId
+                    var user_id = socketIdToUserIdMap.get(socketId);// Remove userId from map on disconnect
+                    socketIdToUserIdMap.values().remove(user_id);
+                    socket.disconnect(true);
+                    namespace.broadcast(lobbyNamespace, "rooms-list", getRoomList().toString());
+                    namespace.broadcast(lobbyNamespace, "disconnect", JsonUtils.toJsonObj(new DrawMessageModel.Message("Client " + user_id + " has disconnected.")));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-                socket.disconnect(true);
-                namespace.broadcast(lobbyNamespace, "rooms-list", getRoomList().toString());
-                namespace.broadcast(lobbyNamespace, "disconnect", JsonUtils.toJsonObj(new DrawMessageModel.Message("Client " + user_id + " has disconnected.")));
-                System.out.println("Client " + user_id + " has disconnected from lobby.");
-                System.out.println("Lobby size: " + socketIdToUserIdMap.size());
             });
         });
     }
