@@ -20,4 +20,13 @@ public class MakeRoomRequest {
 
     @JsonProperty("max_score")
     private int maxScore;
+
+    /*
+    {
+      "capacity": 10,
+      "is_public": true,
+      "topic_id": 1,
+      "max_score": 100
+    }
+     */
 }
