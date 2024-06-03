@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/gudra
     username: postgres
-    password: Minhquan2903
+    password: 12345678
 
   application:
     name=jwt-security:

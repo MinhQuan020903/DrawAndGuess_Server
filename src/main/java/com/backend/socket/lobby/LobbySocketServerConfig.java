@@ -41,6 +41,7 @@ public class LobbySocketServerConfig {
                 roomObj.put("capacity", room.getCapacity());
                 roomObj.put("currentCapacity", userList.getPlayers().size());
                 roomObj.put("topic", topicService.getTopicById(room.getTopicId()).getName());
+                roomObj.put("illustrationUrl", topicService.getTopicById(room.getTopicId()).getIllustrationUrl());
                 roomsList.add(roomObj);
             }
         });
