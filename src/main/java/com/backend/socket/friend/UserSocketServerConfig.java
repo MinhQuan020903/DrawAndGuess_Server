@@ -133,6 +133,30 @@ public class UserSocketServerConfig {
                 socket.send("friends", new JSONArray((friendUsernames)));
             });
 
+            socket.on("invite-friend-to-room", args1 ->{
+                JSONObject obj = (JSONObject) args1[0];
+                String sender = obj.getString("sender");
+                String receiver = obj.getString("receiver");
+                Integer roomId = obj.getInt("roomId");
+                namespace.broadcast(userNamespace, "invite-friend-to-room", new JSONObject()
+                        .put("sender", sender)
+                        .put("receiver", receiver)
+                        .put("roomId", roomId));
+            });
+
+            socket.on("response-invite-friend-to-room", args1 -> {
+                JSONObject obj = (JSONObject) args1[0];
+                String sender = obj.getString("sender");
+                String receiver = obj.getString("receiver");
+                Integer roomId = obj.getInt("roomId");
+                boolean accept = obj.getBoolean("accept");
+                namespace.broadcast(userNamespace, "response-invite-friend-to-room", new JSONObject()
+                        .put("sender", sender)
+                        .put("receiver", receiver)
+                        .put("roomId", roomId)
+                        .put("accept", accept));
+            });
+
             socket.on("disconnect", args1 -> {
                 //Get user id based on socketId
                 var username = usernameToSocketId.get(socketId);// Remove userId from map on disconnect

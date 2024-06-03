@@ -132,6 +132,12 @@ public class DrawSocketServerConfig {
                 namespace.broadcast(String.valueOf(roomId), "room-detail", JsonUtils.toJsonObj(roomManager.getRoomById(roomId)));
             });
 
+            socket.on("get-room-players", args1 -> {
+                JSONObject obj = (JSONObject) args1[0];
+                Integer roomId = obj.getInt("roomId");
+                namespace.broadcast(String.valueOf(roomId), "room-players", JsonUtils.toJsonArray(roomManager.getRoomPlayersById(roomId)));
+            });
+
             socket.on("get-keyword", args1 -> {
                 JSONObject obj = (JSONObject) args1[0];
                 Integer roomId = obj.getInt("roomId");
