@@ -50,18 +50,22 @@ public class UserSocketServerConfig {
                 user.setOnline(true);
                 userService.save(user);
 
-                usernameToSocketId.put(socketId, username);
+                usernameToSocketId.put(username, socketId);
                 socket.joinRoom(userNamespace);
-                System.out.println("User connected: " + Arrays.toString(usernameToSocketId.values().toArray()));
+                System.out.println("User connected: " + username);
                 namespace.broadcast(userNamespace, "new-user");
             });
 
             socket.on("get-users", args1 -> {
                 JSONObject obj = (JSONObject) args1[0];
                 String username = obj.getString("username");
+                String keyword = obj.getString("keyword");
                 ArrayList<String> usernames = new ArrayList<>();
-                for (String user : usernameToSocketId.values()) {
-                    if (friendService.getFriendList(username).stream().noneMatch(u -> u.getUsername().equals(user))) {
+                for (String user : usernameToSocketId.keySet()) {
+                    if (friendService.getFriendList(username).stream().noneMatch(u -> u.getUsername().equals(user)) &&
+                            !user.equalsIgnoreCase(username) &&
+                            user.toLowerCase().contains(keyword.toLowerCase())
+                    && !keyword.isEmpty()) {
                         usernames.add(user);
                     }
                 }
@@ -101,18 +105,30 @@ public class UserSocketServerConfig {
                 String sender = obj.getString("sender");
                 String receiver = obj.getString("receiver");
                 boolean accept = obj.getBoolean("accept");
-                System.out.println("sender:"  + userService.findByUsername(sender).getFriendRequests());
-                System.out.println("receiver:"  + userService.findByUsername(receiver).getFriendRequestsReceive());
+
                 if (accept) {
+                    System.out.println("Accept friend request" + sender + " " + receiver + " " + accept) ;
                     try {
                         friendService.acceptFriendRequest(sender, receiver);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
+                } else {
+                    System.out.println("Reject friend request");
+                    try {
+                        //Delete friend request from sender and receiver
+                        User user = userService.findByUsername(receiver);
+                        user.removeFriendRequestReceive(sender);
+                        userService.save(user);
+
+                        user = userService.findByUsername(sender);
+                        user.removeFriendRequest(receiver);
+                        userService.save(user);
+
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-                userService.findByUsername(receiver).removeFriendRequest(sender);
-                userService.findByUsername(sender).removeFriendRequestReceive(receiver);
-                System.out.println("aloha" + friendService.getFriendList(sender));
                 namespace.broadcast(userNamespace, "friend-request-response", new JSONObject()
                         .put("sender", sender)
                         .put("receiver", receiver)
@@ -129,7 +145,6 @@ public class UserSocketServerConfig {
                         friendUsernames.add(user.getUsername());
                     }
                 }
-                System.out.println("friends of user: " + username  + ": " + friendUsernames);
                 socket.send("friends", new JSONArray((friendUsernames)));
             });
 
@@ -159,7 +174,11 @@ public class UserSocketServerConfig {
 
             socket.on("disconnect", args1 -> {
                 //Get user id based on socketId
-                var username = usernameToSocketId.get(socketId);// Remove userId from map on disconnect
+                var username = usernameToSocketId.entrySet().stream()
+                        .filter(entry -> entry.getValue().equals(socketId))
+                        .map(entry -> entry.getKey())
+                        .findFirst()
+                        .orElse(null);
                 User user = userService.findByUsername(username);
                 user.setOnline(false);
                 userService.save(user);

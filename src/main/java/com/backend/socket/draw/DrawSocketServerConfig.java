@@ -247,7 +247,7 @@ public class DrawSocketServerConfig {
                     List<Player> roomPlayers = roomManager.getRoomPlayersById(roomId);
                     JSONArray roomPlayersJson = JsonUtils.toJsonArray(roomPlayers);
                     namespace.broadcast(String.valueOf(roomId), "player-disconnect", roomPlayersJson);
-                    System.out.println("Client " + username + " has disconnected from room.");
+                    System.out.println("Client " + username + " has disconnected from room" + roomId);
                 });
             });
         });
