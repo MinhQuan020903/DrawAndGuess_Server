@@ -101,18 +101,18 @@ public class FriendService {
             if (receiver.isPresent()) {
                 // Xử lý ở người gửi
                 User getSender = sender.get();
-                if (!getSender.getFriendRequestsReceive().contains(receiverUsername)) {
-                    throw new Exception("Friend Requests Receive List of " + senderUsername + " doesn't contain " + receiverUsername);
+                if (!getSender.getFriendRequests().contains(receiverUsername)) {
+                    throw new Exception("Friend Requests List of " + senderUsername + " doesn't contain " + receiverUsername);
                 }
-                getSender.removeFriendRequestReceive(receiverUsername);
+                getSender.removeFriendRequest(receiverUsername);
                 getSender.addFriendList(receiverUsername);
                 userRepository.save(getSender);
                 // Xử lý ở người nhận
                 User getReceiver = receiver.get();
-                if (!getReceiver.getFriendRequests().contains(senderUsername)) {
+                if (!getReceiver.getFriendRequestsReceive().contains(senderUsername)) {
                     throw new Exception("Friend Requests List of " + receiverUsername + " doesn't contain " + senderUsername);
                 }
-                getReceiver.removeFriendRequest(senderUsername);
+                getReceiver.removeFriendRequestReceive(senderUsername);
                 getReceiver.addFriendList(senderUsername);
                 userRepository.save(getReceiver);
             } else {
